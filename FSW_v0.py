@@ -8,6 +8,7 @@ import adafruit_bno055
 import math
 import numpy as np
 import csv
+import RPi.GPIO as gpio
 from fsw_helpers import *
 
 #init ---------------------------------------------
@@ -30,7 +31,7 @@ h_velo = 0
 alpha_mag = 0.7
 alpha_gyr = 0.7
 mag_gain = np.array([1.0, 1.0, 1.0])
-gyr_gain = np.array([1.0, 1.0, 1.0])
+gyr_gain = np.array([180/math.pi, 180/math.pi, 180/math.pi])
 mag_offset = np.array([0.0, 0.0, 0.0])
 gyr_offset = np.array([0.0, 0.0, 0.0])
 mag = None
@@ -39,11 +40,19 @@ mag_cali = np.array([0.0, 0.0, 0.0])
 gyr_cali = np.array([0.0, 0.0, 0.0])
 
 servo = 0.0
+servo_pin = 17  #pin 11, GPIO 17
+gpio.setmode(gpio.BCM)
+gpio.setup(servo_pin, gpio.OUT)
+servo_min = 7.5
+servo_max = 8.8
+s = gpio.PWM(servo_pin, 50) # GPIO 17 for PWM with 50Hz
+s.start(2.5) # Initialization
 ctl_mode = 3
 kp = 0.01  ###TODO: update with realistic values
 kd = 0.20
 #waypoint structure: time (s), lat (deg.ddddd), lon (deg.ddddd), alt (m)
-waypoints = np.array([[  0.0, 38.55278, -121.71326, 15], 
+#waypoints = np.array([[  0.0, 38.55278, -121.71326, 15], 
+waypoints = np.array([[  0.0, 38.55176, -121.71682, 15], 
                       [ 60.0, 38.55278, -121.71271, 15], 
                       [120.0, 38.55220, -121.71348, 15], 
                       [180.0, 38.55216, -121.71267, 15]])
@@ -58,7 +67,7 @@ num_waypoints = 4
 outer = 15.0
 inner =  5.0
 
-file_name = "GPS_test_2.csv"
+file_name = "GPS_test_road.csv"
 header = ['Count','GPS_time','DeltaT','Lat','Lon','Ctl_mode','Heading','Heading_rate','Heading_error','Heading_rate_erro','Servo']
 with open(file_name, 'w', encoding='UTF8', newline='') as f:
     writer = csv.writer(f)
@@ -69,9 +78,9 @@ with open(file_name, 'w', encoding='UTF8', newline='') as f:
 #file.close()
 
 print("init done")
-
+time.sleep(120.0)
 count = 0
-while count < 300:
+while True: #count < 600:
 
     #read sensors -------------------------------------
     mag_raw = IMU.magnetic     #3-tuple, in uT
@@ -129,7 +138,7 @@ while count < 300:
         gps_valid = (lat > 20.0)  #we know we will be in the northern hemisphere
     
     heading = (180/math.pi) * math.atan2(mag[1], mag[0])
-    heading_rate = gyr[2]  #TODO: double check gyro is deg/s
+    heading_rate = gyr[2] 
     #TODO: adjust heading with GPS info
 
     #calculate state ------------------------------------------------
@@ -181,7 +190,14 @@ while count < 300:
         h_error = 0
         hd_error = (360 * h_velo) / (2 * outer * math.pi) - heading_rate
     
-    servo = kp * h_error + kd * hd_error
+    #servo = (kp * h_error + kd * hd_error) + 0.5*(servo_min + servo_max)
+    if h_error > 5:
+        servo = servo_max
+    elif h_error < -5:
+        servo = servo_min
+    else:
+        servo = 0.5*(servo_min+servo_max)
+    s.ChangeDutyCycle(servo)
     #TODO: map servo cmd
     #TODO: command servo
 
