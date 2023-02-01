@@ -12,6 +12,7 @@ import csv
 import RPi.GPIO as gpio
 from fsw_helpers import *
 #from GPS_Poller import *
+import os
 
 gpsd = None #create global variable for gpsd
 
@@ -87,8 +88,13 @@ if __name__ == '__main__':
     num_waypoints = 4
     outer = 15.0
     inner =  5.0
-
-    file_name = "GPS_test_Feb1_2.csv"
+    
+    
+    file_name = "GPS_test_Feb1_"
+    trial = 1
+    while os.path.exists(file_name + str(trial) + ".csv"):
+        trial += 1
+    file_name = file_name + str(trial) + ".csv"
     header = ['Count','GPS_time','DeltaT','Lat','Lon','Ctl_mode','Heading','Heading_rate','Heading_error','Heading_rate_erro','Servo']
     with open(file_name, 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)
@@ -110,9 +116,12 @@ if __name__ == '__main__':
 
             #read sensors -------------------------------------
             #TODO TRY EXCEPT
-            mag_raw = IMU.magnetic     #3-tuple, in uT
-            gyr_raw = IMU.gyro         #3-tuple, in deg/s
-
+            try:
+                mag_raw = IMU.magnetic     #3-tuple, in uT
+                gyr_raw = IMU.gyro         #3-tuple, in deg/s
+            except:
+                mag_raw = mag  #TODO, update this
+                gyr_raw = gyr
             #TODO: restructure this so we get valid data each time.
             #TODO: manage so buffer doesn't fill up
 
@@ -229,7 +238,7 @@ if __name__ == '__main__':
             #file.close()
             #print(data)
             count += 1
-            time.sleep(0.3)
+            time.sleep(0.33)
      
     except (KeyboardInterrupt, SystemExit):
         print("\nKilling thread")
