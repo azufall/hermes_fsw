@@ -49,8 +49,9 @@ if __name__ == '__main__':
     v_velo = 0
     h_velo = 0
 
-    alpha_mag = 0.7
-    alpha_gyr = 0.7
+    alpha_mag = 0.5
+    alpha_gyr = 0.3
+    gyr_limit = 90
     mag_gain = np.array([1.0, 1.0, 1.0])
     gyr_gain = np.array([180/math.pi, 180/math.pi, 180/math.pi])
     mag_offset = np.array([0.0, 0.0, 0.0])
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     inner =  5.0
     
     
-    file_name = "GPS_test_Feb1_"
+    file_name = "GPS_test_Feb2_"
     trial = 1
     while os.path.exists(file_name + str(trial) + ".csv"):
         trial += 1
@@ -149,6 +150,8 @@ if __name__ == '__main__':
             #    mag_prev = mag
 
             for i in range(3):
+                if abs(gyr_raw[i]) > gyr_limit:
+                    gyr_raw[i] = gyr[i]
                 gyr_cali[i] = gyr_gain[i] * (gyr_raw[i] - gyr_offset[i])
             if gyr is not None:
                 gyr = alpha_gyr*gyr_cali + (1-alpha_gyr)*gyr
@@ -166,7 +169,7 @@ if __name__ == '__main__':
                 gps_valid = (lat > 20.0) and (lat_count < 25)  #we know we will be in the northern hemisphere
     
             heading = (180/math.pi) * math.atan2(mag[1], mag[0])
-            heading_rate = gyr[2] 
+            heading_rate = -1*gyr[2]
             #TODO: adjust heading with GPS info
 
             #calculate state ------------------------------------------------
@@ -200,19 +203,19 @@ if __name__ == '__main__':
                 dir_ecef = np.array([[wypt_x-xi], [wypt_y-yi], [wypt_z-zi]])
                 R_ecef2ned = ecef2ned(lat, lon)
                 dir_ned = np.matmul(R_ecef2ned, dir_ecef)
-                dx = dir_ned[1] # east distance, in m  
-                dy = dir_ned[0] #north distance, in m
-                dist = math.sqrt(dx**2+dy**2) #distance, in m
+                dE = dir_ned[1] # east distance, in m  
+                dN = dir_ned[0] #north distance, in m
+                dist = math.sqrt(dE**2+dN**2) #distance, in m
                 if dist > outer:
                     ctl_mode = 1  #track
                 if dist < inner:
                     ctl_mode = 2  #orbit
             
             if ctl_mode < 1.5:      #track
-                h_error = (180/math.pi) * math.atan2(dy,dx) - heading
+                h_error = (180/math.pi) * math.atan2(-1*dE,dN) - heading
                 hd_error = -1 * heading_rate
             elif ctl_mode < 2.5: #orbit
-                h_error = (180/math.pi) * math.atan2(dy,dx) - heading - 80 #TODO: see if a value closer to 90 is better
+                h_error = (180/math.pi) * math.atan2(-1*dE,dN) - heading - 80 #TODO: see if a value closer to 90 is better
                 hd_error = (360 * h_velo) / (2 * dist * math.pi) - heading_rate
             else:                   #spiral
                 h_error = 0
