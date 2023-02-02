@@ -1,6 +1,13 @@
 import math
 import numpy as np
 
+def wrapToPi(x):
+    #given angle in radians, return value between [-pi,pi]
+    xi = x
+    while abs(xi) > math.pi:
+        xi = xi - 2*math.pi*np.sign(xi)
+    return xi
+
 def llh2ecef(lat, lon, height):
     #Source: pynmeagps github helper functions
     #Identical to Vallado, pg 173

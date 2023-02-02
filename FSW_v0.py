@@ -87,8 +87,8 @@ if __name__ == '__main__':
         waypoints[i][3] = z
     
     num_waypoints = 4
-    outer = 15.0
-    inner =  5.0
+    outer =  8.0
+    inner =  4.0
     
     
     file_name = "GPS_test_Feb2_"
@@ -212,10 +212,10 @@ if __name__ == '__main__':
                     ctl_mode = 2  #orbit
             
             if ctl_mode < 1.5:      #track
-                h_error = (180/math.pi) * math.atan2(-1*dE,dN) - heading
+                h_error = (-180/math.pi)*wrapToPi(math.atan2(dN,dE)-math.pi/2) - heading
                 hd_error = -1 * heading_rate
             elif ctl_mode < 2.5: #orbit
-                h_error = (180/math.pi) * math.atan2(-1*dE,dN) - heading - 80 #TODO: see if a value closer to 90 is better
+                h_error = (-180/math.pi)*wrapToPi(math.atan2(dN,dE)-math.pi/2) - heading - 80 #TODO: see if a value closer to 90 is better
                 hd_error = (360 * h_velo) / (2 * dist * math.pi) - heading_rate
             else:                   #spiral
                 h_error = 0
