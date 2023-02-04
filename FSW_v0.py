@@ -91,7 +91,7 @@ if __name__ == '__main__':
     inner =  4.0
     
     
-    file_name = "GPS_test_Feb2_"
+    file_name = "GPS_test_Feb3_"
     trial = 1
     while os.path.exists(file_name + str(trial) + ".csv"):
         trial += 1
@@ -220,7 +220,7 @@ if __name__ == '__main__':
             else:                   #spiral
                 h_error = 0
                 hd_error = (360 * h_velo) / (2 * outer * math.pi) - heading_rate
-    
+            h_error = (180/math.pi)*wrapToPi((math.pi/180)*h_error)
             #servo = (kp * h_error + kd * hd_error) + 0.5*(servo_min + servo_max)
             if   h_error >  10: servo = servo_max
             elif h_error >   5: servo = 0.5*(servo_mid + servo_max)
