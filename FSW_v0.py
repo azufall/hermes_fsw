@@ -78,10 +78,10 @@ if __name__ == '__main__':
     #                       300.0, 38.55278, -121.71271, 15], 
     #                      [600.0, 38.55220, -121.71348, 15], 
     #                      [900.0, 38.55216, -121.71267, 15]])
-    waypoints = np.array([[  0.0, 38.551729, -121.713645, 20],  #manhole cover right outside 2900 Spafford 
-                          [300.0, 38.552045, -121.713637, 20],  #manhole cover north, alongside Spafford 
-                          [600.0, 38.551729, -121.713645, 20], 
-                          [900.0, 38.552045, -121.713637, 20]])
+    waypoints = np.array([[  0.0, 38.551797, -121.713620, 20],  #manhole cover right outside 2900 Spafford 
+                          [300.0, 38.552102, -121.713626, 20],  #manhole cover north, alongside Spafford 
+                          [600.0, 38.551797, -121.713620, 20], 
+                          [900.0, 38.552102, -121.713626, 20]])
     num_waypoints = 4
     #convert waypoints to ECEF
     for i in range(num_waypoints):
@@ -223,7 +223,7 @@ if __name__ == '__main__':
                 h_error = (-180/math.pi)*wrapToPi(math.atan2(dN,dE)-math.pi/2) - heading - 80 #TODO: see if a value closer to 90 is better
                 hd_error = (360 * h_velo) / (2 * dist * math.pi) - heading_rate
             else:                   #spiral
-                h_error = 0
+                h_error = 90
                 hd_error = (360 * h_velo) / (2 * outer * math.pi) - heading_rate
             h_error = (180/math.pi)*wrapToPi((math.pi/180)*h_error)
             #servo = (kp * h_error + kd * hd_error) + 0.5*(servo_min + servo_max)
