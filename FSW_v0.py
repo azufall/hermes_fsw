@@ -74,24 +74,26 @@ if __name__ == '__main__':
     kp = 0.01  ###TODO: update with realistic values
     kd = 0.20
     #waypoint structure: time (s), lat (deg.ddddd), lon (deg.ddddd), alt (m)
-    #waypoints = np.array([[  0.0, 38.55278, -121.71326, 15], 
-    waypoints = np.array([[  0.0, 38.55173, -121.71364, 15],  #manhole cover right outside 2900 Spafford 
-                          [ 60.0, 38.55278, -121.71271, 15], 
-                          [120.0, 38.55220, -121.71348, 15], 
-                          [180.0, 38.55216, -121.71267, 15]])
+    #waypoints = np.array([[  0.0, 38.55278, -121.71326, 15],
+    #                       300.0, 38.55278, -121.71271, 15], 
+    #                      [600.0, 38.55220, -121.71348, 15], 
+    #                      [900.0, 38.55216, -121.71267, 15]])
+    waypoints = np.array([[  0.0, 38.551729, -121.713645, 20],  #manhole cover right outside 2900 Spafford 
+                          [300.0, 38.552045, -121.713637, 20],  #manhole cover north, alongside Spafford 
+                          [600.0, 38.551729, -121.713645, 20], 
+                          [900.0, 38.552045, -121.713637, 20]])
+    num_waypoints = 4
     #convert waypoints to ECEF
-    for i in range(4):
+    for i in range(num_waypoints):
         (x,y,z) = llh2ecef(lat=waypoints[i][1], lon=waypoints[i][2], height=waypoints[i][3])
         waypoints[i][1] = x
         waypoints[i][2] = y
         waypoints[i][3] = z
     
-    num_waypoints = 4
     outer =  8.0
     inner =  4.0
     
-    
-    file_name = "GPS_test_Feb3_"
+    file_name = "GPS_test_Feb_8"
     trial = 1
     while os.path.exists(file_name + str(trial) + ".csv"):
         trial += 1
@@ -184,9 +186,12 @@ if __name__ == '__main__':
             state[7] = servo
 
             #determine waypoint --------------------------------------------------
-            if delta_t is not None:
+            if count is not None:
+                wypt_x = waypoints[0][1] #default in case something goes haywire
+                wypt_y = waypoints[0][2]
+                wypt_z = waypoints[0][3]
                 for i in range(num_waypoints):
-                    if delta_t > waypoints[i][0]:
+                    if count > waypoints[i][0]:
                         wypt_x = waypoints[i][1]
                         wypt_y = waypoints[i][2]
                         wypt_z = waypoints[i][3]
@@ -222,10 +227,10 @@ if __name__ == '__main__':
                 hd_error = (360 * h_velo) / (2 * outer * math.pi) - heading_rate
             h_error = (180/math.pi)*wrapToPi((math.pi/180)*h_error)
             #servo = (kp * h_error + kd * hd_error) + 0.5*(servo_min + servo_max)
-            if   h_error >  10: servo = servo_max
-            elif h_error >   5: servo = 0.5*(servo_mid + servo_max)
-            elif h_error < -10: servo = servo_min
-            elif h_error <  -5: servo = 0.5*(servo_mid + servo_min)
+            if   h_error >  20: servo = servo_max
+            elif h_error >  10: servo = 0.5*(servo_mid + servo_max)
+            elif h_error < -20: servo = servo_min
+            elif h_error < -10: servo = 0.5*(servo_mid + servo_min)
             else:               servo = servo_mid
             s.ChangeDutyCycle(servo)
             #TODO: map servo cmd
@@ -241,7 +246,7 @@ if __name__ == '__main__':
             #file.close()
             #print(data)
             count += 1
-            time.sleep(0.33)
+            time.sleep(0.23)
      
     except (KeyboardInterrupt, SystemExit):
         print("\nKilling thread")
